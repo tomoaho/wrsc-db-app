@@ -314,6 +314,7 @@ h2 {
     background-color: #ff6384;
 }
 
+/* ★種目バッジの色修正: デフォルト設定を先に書く */
 .event-badge {
     display: inline-block;
     padding: 3px 8px;
@@ -325,11 +326,12 @@ h2 {
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
+/* デフォルト色 (グレー) を先に定義 */
 [class*="badge-"] {
     background-color: #636e72;
 }
 
-/* 各種目の色設定 (こちらを後に書くことで優先される) */
+/* 各種目の色設定 (後に書くことで優先される) */
 .badge-AR60 {
     background-color: #d4af37;
     /* Gold */
@@ -338,7 +340,7 @@ h2 {
 
 .badge-SB3x20 {
     background-color: #006400;
-    /* DarkGreen */
+    /* Green */
 }
 
 .badge-P60 {
@@ -713,7 +715,7 @@ input[type="number"] {
 }
 
 /* --- ランキング・グラフ共通 --- */
-/* ★修正: 1. 幅制限の削除 */
+/* ★修正: 1. ランキング表の幅制限を削除 */
 .ranking-grid {
     display: flex;
     gap: 30px;

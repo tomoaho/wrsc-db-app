@@ -4,13 +4,11 @@
 // 共通機能
 // =========================================================
 
-// --- サイドバーの開閉 ---
 function toggleSidebar() {
     document.getElementById('sidebar').classList.toggle('active');
     document.getElementById('overlay').classList.toggle('active');
 }
 
-// --- 管理者パスワード確認 ---
 function checkAdminPass(event) {
     const ADMIN_PASS = "shoot123";
     var pass = prompt("管理者パスワードを入力してください:", "");
@@ -23,7 +21,6 @@ function checkAdminPass(event) {
     }
 }
 
-// --- タブ切り替え機能 (Player, MatchResult 共通) ---
 function openTab(evt, tabName) {
     var tabContent = document.getElementsByClassName("tab-content");
     for (var i = 0; i < tabContent.length; i++) {
@@ -207,10 +204,8 @@ function updateMatchYearsChart(targetEvent) {
     // データフィルタリング
     const filteredDatasets = [];
     globalMatchYearsDatasets.forEach(ds => {
-        // ラベルに競技名が含まれているか確認 (例: "AR60 男" -> "AR60"を含む)
         if (ds.label.includes(targetEvent)) {
             let newDs = { ...ds };
-            // 色設定の適用
             if (newDs.label.includes('男')) {
                 newDs.borderColor = 'rgba(54, 162, 235, 1)';
                 newDs.backgroundColor = 'rgba(54, 162, 235, 1)';
@@ -227,7 +222,7 @@ function updateMatchYearsChart(targetEvent) {
     });
 
     const canvas = document.getElementById('teamTrendChart');
-    if (!canvas) return; // キャンバスがなければ終了
+    if (!canvas) return;
 
     const ctx = canvas.getContext('2d');
     if (trendChart) {

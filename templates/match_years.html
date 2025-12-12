@@ -120,7 +120,6 @@
         const matchYearsDatasets = {{ chart_datasets | tojson }};
 
         // グラフ初期化 (script.js)
-        // データが存在するときだけ初期化
         if (matchYearsDatasets && matchYearsDatasets.length > 0) {
             initMatchYearsChart(matchYearsLabels, matchYearsDatasets);
         }
