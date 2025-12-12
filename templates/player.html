@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ player.name }}の記録</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</head>
+<body>
+    <header class="site-header">
+        <div class="header-left">
+            <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+            <a href="{{ url_for('index') }}" class="header-logo"><span>🎯 射撃部DB</span></a>
+        </div>
+    </header>
+
+    <nav class="site-sidebar" id="sidebar">
+        <div style="padding: 20px; font-weight: bold; font-size: 1.2em; border-bottom: 1px solid rgba(255,255,255,0.1);">メニュー</div>
+        <a href="{{ url_for('index') }}" class="sidebar-link">🏠 トップページ</a>
+        <a href="{{ url_for('ranking') }}" class="sidebar-link">🏆 ランキング</a>
+        <a href="{{ url_for('matches') }}" class="sidebar-link">📅 大会記録</a>
+        <a href="https://waseda-shooting.com/" target="_blank" class="sidebar-link">🔗 射撃部HP</a>
+    </nav>
+
+    <div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <h1>{{ player.name }} 選手の記録</h1>
+        <section class="player-summary-section">
+            <div class="summary-grid">
+                {% for event, data in summary_data.items() %}
+                <div class="summary-card">
+                    {% set title_color = '#333' %}
+                    {% set border_color = '#ccc' %}
+                    {% if event == 'AR60' %} {% set title_color = '#d4af37' %} {% set border_color = '#d4af37' %}
+                    {% elif event == 'SB3x20' %} {% set title_color = '#006400' %} {% set border_color = '#006400' %}
+                    {% elif event == 'P60' %} {% set title_color = '#8e44ad' %} {% set border_color = '#8e44ad' %}
+                    {% endif %}
+
+                    <h3 class="summary-title" style="border-bottom: 2px solid {{ border_color }}; color: {{ title_color }};">
+                        {{ event }}
+                    </h3>
+                    
+                    <div class="summary-row" style="align-items: baseline;">
+                        <span class="label">Best</span>
+                        <div style="text-align: right;">
+                            <span class="value best-score">{{ data.max }}</span>
+                            <span class="rank-badge" style="font-size: 0.8em; color: #666; margin-left: 5px;">
+                                ({{ data.rank_best }}/{{ data.total_players }}位)
+                            </span>
+                        </div>
+                    </div>
+
+                    <hr style="border: 0; border-top: 1px dashed #eee; margin: 8px 0;">
+
+                    <div class="summary-row" style="align-items: baseline;">
+                        <span class="label">Avg</span>
+                        <div style="text-align: right;">
+                            <span class="value">{{ data.avg }}</span>
+                            <span class="rank-badge" style="font-size: 0.8em; color: #666; margin-left: 5px;">
+                                ({{ data.rank_avg }}/{{ data.total_players }}位)
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="summary-row" style="margin-top: 10px;">
+                        <span class="label">試合数</span>
+                        <span class="value small">{{ data.count }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <h2>種目別スコア推移</h2>
+        <div class="chart-tabs">
+            {% for dataset in graph_datasets %}
+            <button class="tab-btn {{ 'active' if loop.first }}" onclick="openTab(event, 'tab-{{ loop.index0 }}')">{{ dataset.label }}</button>
+            {% endfor %}
+        </div>
+        <div class="chart-tab-container">
+            {% for dataset in graph_datasets %}
+            <div id="tab-{{ loop.index0 }}" class="tab-content" style="display: {{ 'block' if loop.first else 'none' }};">
+                <div style="text-align: right; margin-bottom: 10px;">
+                    <label style="font-size: 0.9em; color: #555; font-weight: bold;">
+                        目標ライン: <input type="number" step="0.1" placeholder="例: 600" style="width: 80px; padding: 5px; border: 1px solid #ccc; border-radius: 4px;" onchange="updateTargetLine({{ loop.index0 }}, this.value)"> 点
+                    </label>
+                </div>
+                <div class="individual-chart-container"><canvas id="chart-{{ loop.index0 }}"></canvas></div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <h2>スコア履歴</h2>
+        
+        <div class="history-filter-container">
+            <span class="filter-icon">🔍 絞り込み:</span>
+            
+            <select id="filterMatch" onchange="filterHistory()">
+                <option value="">全ての大会</option>
+                {% for m_name in scores|map(attribute='match_name')|unique %}
+                    <option value="{{ m_name }}">{{ m_name }}</option>
+                {% endfor %}
+            </select>
+
+            <select id="filterEvent" onchange="filterHistory()">
+                <option value="">全ての種目</option>
+                {% for e_name in scores|map(attribute='event_name')|unique %}
+                    <option value="{{ e_name }}">{{ e_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="legend-container">
+            <span><strong>SB3x20 色分け:</strong></span>
+            <span class="legend-item"><span class="legend-box pos-knee"></span>Knee</span>
+            <span class="legend-item"><span class="legend-box pos-prone"></span>Prone</span>
+            <span class="legend-item"><span class="legend-box pos-stand"></span>Stand</span>
+        </div>
+
+        <table class="score-table" id="historyTable">
+            <thead>
+                <tr>
+                    <th>日付</th>
+                    <th>大会名</th>
+                    <th>種目</th>
+                    <th>S1</th><th>S2</th><th>S3</th><th>S4</th><th>S5</th><th>S6</th>
+                    <th>合計</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for score in scores %}
+                {% set is_sb = 'SB' in score.event_name or '3x20' in score.event_name %}
+                <tr class="history-row" data-match="{{ score.match_name }}" data-event="{{ score.event_name }}">
+                    <td>{{ score.date }}</td>
+                    <td>{{ score.match_name }}</td>
+                    <td>{{ score.event_name }}</td>
+                    <td class="{{ 'pos-knee' if is_sb }}">{{ score.s1 }}</td>
+                    <td class="{{ 'pos-knee' if is_sb }}">{{ score.s2 }}</td>
+                    <td class="{{ 'pos-prone' if is_sb }}">{{ score.s3 }}</td>
+                    <td class="{{ 'pos-prone' if is_sb }}">{{ score.s4 }}</td>
+                    <td class="{{ 'pos-stand' if is_sb }}">{{ score.s5 }}</td>
+                    <td class="{{ 'pos-stand' if is_sb }}">{{ score.s6 }}</td>
+                    <td><strong>{{ score.total }}</strong></td>
+                    <td style="white-space: nowrap;">
+                        <a href="{{ url_for('edit_score', score_id=score.id) }}" class="btn-edit" onclick="return checkAdminPass(event)">編集</a>
+                        <form action="{{ url_for('delete_score', score_id=score.id) }}" method="post" style="display:inline;" onsubmit="if(confirm('本当に削除しますか？')) { return checkAdminPass(event); } else { return false; }">
+                            <button type="submit" class="btn-delete">削除</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        // Pythonからデータを受け取る
+        const graphLabels = {{ graph_labels | tojson }};
+        const graphDatasets = {{ graph_datasets | tojson }};
+        const playerGoals = {{ player_goals | tojson }};
+        const playerGender = "{{ player.gender }}";
+
+        // グラフ初期化 (script.js)
+        initPlayerCharts(graphLabels, graphDatasets, playerGoals, playerGender);
+    </script>
+</body>
+</html>

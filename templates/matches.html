@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>大会一覧 - 射撃部DB</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</head>
+<body>
+    <header class="site-header">
+        <div class="header-left">
+            <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+            <a href="{{ url_for('index') }}" class="header-logo"><span>🎯 射撃部DB</span></a>
+        </div>
+    </header>
+
+    <nav class="site-sidebar" id="sidebar">
+        <div style="padding: 20px; font-weight: bold; font-size: 1.2em; border-bottom: 1px solid rgba(255,255,255,0.1);">メニュー</div>
+        <a href="{{ url_for('index') }}" class="sidebar-link">🏠 トップページ</a>
+        <a href="{{ url_for('ranking') }}" class="sidebar-link">🏆 ランキング</a>
+        <a href="{{ url_for('matches') }}" class="sidebar-link">📅 大会記録</a>
+        <a href="https://waseda-shooting.com/" target="_blank" class="sidebar-link">🔗 射撃部HP</a>
+    </nav>
+    <div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <h1>大会記録アーカイブ</h1>
+        <p>大会を選択してください。</p>
+
+        <div class="matches-grid">
+            {% for name in match_names %}
+            <a href="{{ url_for('match_years', match_name=name) }}" class="match-card">
+                <div class="match-icon">🏆</div>
+                <div class="match-info">
+                    <h3 class="match-name">{{ name }}</h3>
+                </div>
+                <div class="match-arrow">→</div>
+            </a>
+            {% else %}
+            <p>登録された大会はありません。</p>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>

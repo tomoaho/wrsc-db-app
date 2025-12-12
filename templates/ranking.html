@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>部内ランキング - 射撃部DB</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</head>
+<body>
+    <header class="site-header">
+        <div class="header-left">
+            <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+            <a href="{{ url_for('index') }}" class="header-logo"><span>🎯 射撃部DB</span></a>
+        </div>
+    </header>
+
+    <nav class="site-sidebar" id="sidebar">
+        <div style="padding: 20px; font-weight: bold; font-size: 1.2em; border-bottom: 1px solid rgba(255,255,255,0.1);">メニュー</div>
+        <a href="{{ url_for('index') }}" class="sidebar-link">🏠 トップページ</a>
+        <a href="{{ url_for('ranking') }}" class="sidebar-link">🏆 ランキング</a>
+        <a href="{{ url_for('matches') }}" class="sidebar-link">📅 大会記録</a>
+        <a href="https://waseda-shooting.com/" target="_blank" class="sidebar-link">🔗 射撃部HP</a>
+    </nav>
+    <div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <h1 style="text-align: center; margin-bottom: 30px;">部内ランキング</h1>
+
+        <div class="ranking-mode-tabs">
+            <button class="mode-btn active" onclick="switchRankMode('avg')">平均点ランキング</button>
+            <button class="mode-btn" onclick="switchRankMode('max')">最高点ランキング</button>
+        </div>
+
+        <div class="event-tabs">
+            <button class="event-tab-btn active" data-event="AR60" onclick="switchRankEvent('AR60')">AR60</button>
+            <button class="event-tab-btn" data-event="SB3x20" onclick="switchRankEvent('SB3x20')">SB3x20</button>
+            <button class="event-tab-btn" data-event="P60" onclick="switchRankEvent('P60')">P60</button>
+        </div>
+
+        <div id="mode-avg" class="mode-content active">
+            {% for event in ['AR60', 'SB3x20', 'P60'] %}
+            <div id="avg-{{ event }}" class="event-content {{ 'active' if loop.first }}">
+                
+                {% for scope_name, scope_data in [('📅 今年度 (' ~ current_year ~ '年度)', rankings_current), ('♾️ 通算 (全期間)', rankings_all)] %}
+                
+                <h2 class="rank-section-title">{{ scope_name }}</h2>
+                
+                {% if '全期間' in scope_name %}
+                <div class="ranking-search-box">
+                    <input type="text" id="search-avg-{{ event }}" class="ranking-search-input" placeholder="名前で検索...">
+                    <button class="ranking-search-btn" onclick="filterRanking('avg-{{ event }}', 'search-avg-{{ event }}')">検索</button>
+                    <button class="ranking-search-btn" style="background-color: #6c757d;" onclick="resetRanking('avg-{{ event }}', 'search-avg-{{ event }}')">リセット</button>
+                </div>
+                {% endif %}
+
+                <div class="ranking-grid" id="grid-avg-{{ event }}-{{ loop.index }}"> 
+                    <div class="ranking-column">
+                        <div class="rank-header" style="color: #007bff; border-color: #007bff;">男子 ({{ event }})</div>
+                        <table class="score-table ranking-table">
+                            <thead><tr><th>順位</th><th>選手名</th><th>平均点</th><th>試合数</th></tr></thead>
+                            <tbody class="ranking-tbody">
+                                {% for p in scope_data[event]['男']['avg'] %}
+                                <tr class="rank-row">
+                                    <td class="rank-num rank-{{ loop.index }}">{{ loop.index }}</td>
+                                    <td style="text-align: left;" class="player-name-cell"><a href="{{ url_for('player_detail', player_id=p.id) }}">{{ p.name }}</a></td>
+                                    <td class="highlight-val">{{ p.avg }}</td>
+                                    <td>{{ p.count }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="ranking-column">
+                        <div class="rank-header" style="color: #e83e8c; border-color: #e83e8c;">女子 ({{ event }})</div>
+                        <table class="score-table ranking-table">
+                            <thead><tr><th>順位</th><th>選手名</th><th>平均点</th><th>試合数</th></tr></thead>
+                            <tbody class="ranking-tbody">
+                                {% for p in scope_data[event]['女']['avg'] %}
+                                <tr class="rank-row">
+                                    <td class="rank-num rank-{{ loop.index }}">{{ loop.index }}</td>
+                                    <td style="text-align: left;" class="player-name-cell"><a href="{{ url_for('player_detail', player_id=p.id) }}">{{ p.name }}</a></td>
+                                    <td class="highlight-val">{{ p.avg }}</td>
+                                    <td>{{ p.count }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endfor %}
+        </div>
+
+        <div id="mode-max" class="mode-content">
+            {% for event in ['AR60', 'SB3x20', 'P60'] %}
+            <div id="max-{{ event }}" class="event-content {{ 'active' if loop.first }}">
+                
+                {% for scope_name, scope_data in [('📅 今年度 (' ~ current_year ~ '年度)', rankings_current), ('♾️ 通算 (全期間)', rankings_all)] %}
+                
+                <h2 class="rank-section-title">{{ scope_name }}</h2>
+
+                {% if '全期間' in scope_name %}
+                <div class="ranking-search-box">
+                    <input type="text" id="search-max-{{ event }}" class="ranking-search-input" placeholder="名前で検索...">
+                    <button class="ranking-search-btn" onclick="filterRanking('max-{{ event }}', 'search-max-{{ event }}')">検索</button>
+                    <button class="ranking-search-btn" style="background-color: #6c757d;" onclick="resetRanking('max-{{ event }}', 'search-max-{{ event }}')">リセット</button>
+                </div>
+                {% endif %}
+
+                <div class="ranking-grid">
+                    <div class="ranking-column">
+                        <div class="rank-header" style="color: #007bff; border-color: #007bff;">男子 ({{ event }})</div>
+                        <table class="score-table ranking-table">
+                            <thead><tr><th>順位</th><th>選手名</th><th>最高点</th><th>試合数</th></tr></thead>
+                            <tbody class="ranking-tbody">
+                                {% for p in scope_data[event]['男']['max'] %}
+                                <tr class="rank-row">
+                                    <td class="rank-num rank-{{ loop.index }}">{{ loop.index }}</td>
+                                    <td style="text-align: left;" class="player-name-cell"><a href="{{ url_for('player_detail', player_id=p.id) }}">{{ p.name }}</a></td>
+                                    <td class="highlight-val">{{ p.max }}</td>
+                                    <td>{{ p.count }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="ranking-column">
+                        <div class="rank-header" style="color: #e83e8c; border-color: #e83e8c;">女子 ({{ event }})</div>
+                        <table class="score-table ranking-table">
+                            <thead><tr><th>順位</th><th>選手名</th><th>最高点</th><th>試合数</th></tr></thead>
+                            <tbody class="ranking-tbody">
+                                {% for p in scope_data[event]['女']['max'] %}
+                                <tr class="rank-row">
+                                    <td class="rank-num rank-{{ loop.index }}">{{ loop.index }}</td>
+                                    <td style="text-align: left;" class="player-name-cell"><a href="{{ url_for('player_detail', player_id=p.id) }}">{{ p.name }}</a></td>
+                                    <td class="highlight-val">{{ p.max }}</td>
+                                    <td>{{ p.count }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>

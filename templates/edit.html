@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>スコア編集</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</head>
+<body>
+   <header class="site-header">
+        <div class="header-left">
+            <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+            <a href="{{ url_for('index') }}" class="header-logo">
+                <span>🎯 射撃部DB</span>
+            </a>
+        </div>
+    </header>
+
+    <nav class="site-sidebar" id="sidebar">
+        <div style="padding: 20px; font-weight: bold; font-size: 1.2em; border-bottom: 1px solid rgba(255,255,255,0.1);">
+            メニュー
+        </div>
+        <a href="{{ url_for('index') }}" class="sidebar-link">🏠 トップページ</a>
+        <a href="{{ url_for('ranking') }}" class="sidebar-link">🏆 ランキング</a>
+        <a href="{{ url_for('matches') }}" class="sidebar-link">📅 大会記録</a>
+        <a href="https://waseda-shooting.com/" target="_blank" class="sidebar-link">🔗 射撃部HP</a>
+        </nav>
+
+    <div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <h1>スコア修正</h1>
+        <p>{{ score.player.name }} - {{ score.match_name }} ({{ score.date }})</p>
+
+        <form method="post">
+            <div class="form-grid">
+                <label>S1: <input type="number" step="0.1" name="s1" value="{{ score.s1 }}"></label>
+                <label>S2: <input type="number" step="0.1" name="s2" value="{{ score.s2 }}"></label>
+                <label>S3: <input type="number" step="0.1" name="s3" value="{{ score.s3 }}"></label>
+                <label>S4: <input type="number" step="0.1" name="s4" value="{{ score.s4 }}"></label>
+                <label>S5: <input type="number" step="0.1" name="s5" value="{{ score.s5 }}"></label>
+                <label>S6: <input type="number" step="0.1" name="s6" value="{{ score.s6 }}"></label>
+            </div>
+            <p>※合計点は保存時に自動再計算されます。</p>
+            
+            <button type="submit" class="btn-save">保存する</button>
+            <a href="{{ url_for('player_detail', player_id=score.player_id) }}" class="btn-cancel">キャンセル</a>
+        </form>
+    </div>
+</body>
+</html>

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ match_name }} 年度一覧 - 射撃部DB</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</head>
+<body>
+    <header class="site-header">
+        <div class="header-left">
+            <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+            <a href="{{ url_for('index') }}" class="header-logo"><span>🎯 射撃部DB</span></a>
+        </div>
+    </header>
+
+    <nav class="site-sidebar" id="sidebar">
+        <div style="padding: 20px; font-weight: bold; font-size: 1.2em; border-bottom: 1px solid rgba(255,255,255,0.1);">メニュー</div>
+        <a href="{{ url_for('index') }}" class="sidebar-link">🏠 トップページ</a>
+        <a href="{{ url_for('ranking') }}" class="sidebar-link">🏆 ランキング</a>
+        <a href="{{ url_for('matches') }}" class="sidebar-link">📅 大会記録</a>
+        <a href="https://waseda-shooting.com/" target="_blank" class="sidebar-link">🔗 射撃部HP</a>
+    </nav>
+    <div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <a href="{{ url_for('matches') }}">← 大会選択に戻る</a>
+        <h1>{{ match_name }}</h1>
+        
+        <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-bottom: 30px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 15px;">
+                <h3 style="margin: 0;">📈 団体得点推移 (Regular)</h3>
+            </div>
+
+            <div class="graph-tabs">
+                <button class="graph-tab-btn active" data-event="AR60" onclick="updateMatchYearsChart('AR60')">AR60</button>
+                <button class="graph-tab-btn" data-event="SB3x20" onclick="updateMatchYearsChart('SB3x20')">SB3x20</button>
+                <button class="graph-tab-btn" data-event="P60" onclick="updateMatchYearsChart('P60')">P60</button>
+            </div>
+
+            <div class="match-chart-wrapper">
+                <canvas id="teamTrendChart"></canvas>
+            </div>
+        </div>
+
+        <p>閲覧したい開催年度を選択してください。</p>
+
+        <table class="score-table">
+            <thead>
+                <tr>
+                    <th>開催年度</th>
+                    <th>開催日</th>
+                    <th>団体メンバー (Regular)</th>
+                    <th>詳細</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for year, data in years_data %}
+                <tr>
+                    <td style="font-weight: bold; font-size: 1.1em;">{{ year }}年度</td>
+                    <td style="white-space: nowrap;">
+                        {% if data.start_date == data.end_date %}
+                            {{ data.start_date }}
+                        {% else %}
+                            {{ data.start_date }} <span style="color: #999;">〜</span><br>
+                            {{ data.end_date }}
+                        {% endif %}
+                    </td>
+                    <td style="text-align: left; font-size: 0.9em; line-height: 1.6;">
+                        {% if data.regulars %}
+                            {% if '早慶戦' in match_name %}
+                                {% set target_keys = ['AR60', 'SB3x20', 'P60'] %}
+                                {% for key in target_keys %}
+                                    {% if key in data.regulars %}
+                                    <div>
+                                        {% set badge_cls = 'badge-default' %}
+                                        {% if 'AR60' in key %} {% set badge_cls = 'badge-AR60' %}
+                                        {% elif 'SB3x20' in key %} {% set badge_cls = 'badge-SB3x20' %}
+                                        {% elif 'P60' in key %} {% set badge_cls = 'badge-P60' %}
+                                        {% endif %}
+                                        <span class="event-badge {{ badge_cls }}">{{ key }}</span>
+                                        {{ data.regulars[key]|join(', ') }}
+                                    </div>
+                                    {% endif %}
+                                {% endfor %}
+                            {% else %}
+                                {% set target_keys = ['AR60 男', 'AR60 女', 'SB3x20 男', 'SB3x20 女'] %}
+                                {% for key in target_keys %}
+                                    {% if key in data.regulars %}
+                                    <div>
+                                        {% set badge_cls = 'badge-default' %}
+                                        {% if 'AR60' in key %} {% set badge_cls = 'badge-AR60' %}
+                                        {% elif 'SB3x20' in key %} {% set badge_cls = 'badge-SB3x20' %}
+                                        {% endif %}
+                                        <span class="event-badge {{ badge_cls }}">{{ key }}</span>
+                                        {{ data.regulars[key]|join(', ') }}
+                                    </div>
+                                    {% endif %}
+                                {% endfor %}
+                            {% endif %}
+                        {% else %}
+                            <span style="color: #999;">団体出場なし</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{{ url_for('match_result', match_name=match_name, year=year) }}" class="btn-detail" style="background-color: #007bff;">
+                            結果を見る
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        // Pythonからデータを受け取る
+        const matchYearsLabels = {{ chart_labels | tojson }};
+        const matchYearsDatasets = {{ chart_datasets | tojson }};
+
+        // グラフ初期化 (script.js)
+        // データが存在するときだけ初期化
+        if (matchYearsDatasets && matchYearsDatasets.length > 0) {
+            initMatchYearsChart(matchYearsLabels, matchYearsDatasets);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ match_name }} ({{ year }}年度) - 射撃部DB</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</head>
+<body>
+    <header class="site-header">
+        <div class="header-left">
+            <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+            <a href="{{ url_for('index') }}" class="header-logo"><span>🎯 射撃部DB</span></a>
+        </div>
+    </header>
+
+    <nav class="site-sidebar" id="sidebar">
+        <div style="padding: 20px; font-weight: bold; font-size: 1.2em; border-bottom: 1px solid rgba(255,255,255,0.1);">メニュー</div>
+        <a href="{{ url_for('index') }}" class="sidebar-link">🏠 トップページ</a>
+        <a href="{{ url_for('ranking') }}" class="sidebar-link">🏆 ランキング</a>
+        <a href="{{ url_for('matches') }}" class="sidebar-link">📅 大会記録</a>
+        <a href="https://waseda-shooting.com/" target="_blank" class="sidebar-link">🔗 射撃部HP</a>
+    </nav>
+    <div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <a href="{{ url_for('match_years', match_name=match_name) }}">← 年度一覧に戻る</a>
+        <h1>{{ match_name }} <small>({{ year }}年度)</small></h1>
+
+      <h2 class="section-header">🏆 団体戦リザルト (Regular)</h2>
+        
+        {% if display_mode == 'mixed' %}
+            {% if team_results_mixed %}
+            <div class="goal-grid">
+                {% for key in ['AR60', 'SB3x20', 'P60'] %}
+                    {% if key in team_results_mixed %}
+                    {% set data = team_results_mixed[key] %}
+                    
+                    {% set title_bg = '#636e72' %}
+                    {% if 'AR60' in key %} {% set title_bg = '#d4af37' %}
+                    {% elif 'SB3x20' in key %} {% set title_bg = '#006400' %}
+                    {% elif 'P60' in key %} {% set title_bg = '#8e44ad' %}
+                    {% endif %}
+
+                    <div class="goal-card" style="align-items: flex-start;">
+                        <div class="goal-title" style="background-color: {{ title_bg }}; color: white;">{{ key }} (混合)</div>
+                        <div style="width: 100%; text-align: center; margin-bottom: 10px;">
+                            <span class="g-value">{{ data.total }}</span> <span class="g-unit">点</span>
+                        </div>
+                        <div style="font-size: 0.9em; width: 100%; border-top: 1px solid #eee; padding-top: 10px;">
+                            {% for member in data.members %}
+                            <div style="display: flex; justify-content: space-between;">
+                                <span>{{ member.player.name }}</span>
+                                <strong>{{ member.total }}</strong>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            {% else %}
+            <p>団体戦の記録はありません。</p>
+            {% endif %}
+
+        {% else %}
+            <div style="display: flex; flex-direction: column; gap: 40px;"> <div style="display: flex; flex-wrap: wrap; gap: 30px;">
+
+                    {% for event in ['AR60', 'SB3x20'] %}
+                        
+                        {% if (event in team_results_male) or (event in team_results_female) %}
+                        
+                        {% set title_bg = '#636e72' %}
+                        {% if event == 'AR60' %} {% set title_bg = '#d4af37' %}
+                        {% elif event == 'SB3x20' %} {% set title_bg = '#006400' %}
+                        {% endif %}
+
+                        <div class="event-group" style="flex: 1; min-width: 500px;"> <h3 style="background-color: {{ title_bg }}; color: white; padding: 8px 15px; border-radius: 4px; display: block; margin-top: 0; margin-bottom: 15px; text-align: center;">
+                                {{ event }}
+                            </h3>
+
+                            <div style="display: flex; flex-wrap: wrap; gap: 20px;">
+                                
+                                {% if event in team_results_male %}
+                                {% set data = team_results_male[event] %}
+                                <div class="goal-card" style="flex: 1; min-width: 250px; align-items: flex-start; border-top: 4px solid #007bff;">
+                                    <div class="goal-title" style="background: none; color: #007bff; text-align: left; padding-left: 0; font-size: 1.1em; margin-bottom: 5px;">
+                                        男子
+                                    </div>
+                                    <div style="width: 100%; text-align: center; margin-bottom: 10px;">
+                                        <span class="g-value">{{ data.total }}</span> <span class="g-unit">点</span>
+                                    </div>
+                                    <div style="font-size: 0.9em; width: 100%; border-top: 1px solid #eee; padding-top: 10px;">
+                                        {% for member in data.members %}
+                                        <div style="display: flex; justify-content: space-between;">
+                                            <span>{{ member.player.name }}</span>
+                                            <strong>{{ member.total }}</strong>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                                {% if event in team_results_female %}
+                                {% set data = team_results_female[event] %}
+                                <div class="goal-card" style="flex: 1; min-width: 250px; align-items: flex-start; border-top: 4px solid #e83e8c;">
+                                    <div class="goal-title" style="background: none; color: #e83e8c; text-align: left; padding-left: 0; font-size: 1.1em; margin-bottom: 5px;">
+                                        女子
+                                    </div>
+                                    <div style="width: 100%; text-align: center; margin-bottom: 10px;">
+                                        <span class="g-value">{{ data.total }}</span> <span class="g-unit">点</span>
+                                    </div>
+                                    <div style="font-size: 0.9em; width: 100%; border-top: 1px solid #eee; padding-top: 10px;">
+                                        {% for member in data.members %}
+                                        <div style="display: flex; justify-content: space-between;">
+                                            <span>{{ member.player.name }}</span>
+                                            <strong>{{ member.total }}</strong>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+
+                </div>
+        {% endif %}
+
+        <h2 class="section-header" style="margin-top: 40px;">👤 個人戦リザルト</h2>
+        
+        <div class="legend-container" style="justify-content: flex-end; margin-bottom: 5px;">
+            <span style="font-size: 0.85em; color: #666;">SB色分け: </span>
+            <span class="legend-item"><span class="legend-box pos-knee"></span>Knee</span>
+            <span class="legend-item"><span class="legend-box pos-prone"></span>Prone</span>
+            <span class="legend-item"><span class="legend-box pos-stand"></span>Stand</span>
+        </div>
+
+        <div class="chart-tabs">
+            {% for event in individual_results.keys() %}
+            <button class="tab-btn {{ 'active' if loop.first }}" onclick="openTab(event, 'tab-{{ loop.index0 }}')">
+                {{ event }}
+            </button>
+            {% endfor %}
+        </div>
+
+        <div class="chart-tab-container ranking-container">
+            {% for event, scores in individual_results.items() %}
+            <div id="tab-{{ loop.index0 }}" class="tab-content" style="display: {{ 'block' if loop.first else 'none' }};">
+                
+                {% set is_sb = 'SB' in event or '3x20' in event %}
+
+                <table class="score-table ranking-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">順位</th>
+                            <th>選手名</th>
+                            <th>日付</th>
+                            <th>区分</th>
+                            <th>S1</th><th>S2</th><th>S3</th><th>S4</th><th>S5</th><th>S6</th>
+                            <th>合計</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in scores %}
+                        <tr class="rank-row rank-{{ loop.index }}">
+                            <td class="rank-num">{{ loop.index }}</td>
+                            <td style="text-align: left;">
+                                <a href="{{ url_for('player_detail', player_id=s.player.id) }}" class="player-link">
+                                    <strong>{{ s.player.name }}</strong>
+                                </a>
+                            </td>
+                            <td style="font-size: 0.9em; color: #555;">{{ s.date }}</td>
+                            <td>
+                                {% if s.category == 'Regular' %}
+                                <span style="color: #d63031; font-weight: bold;">Regular</span>
+                                {% else %}
+                                <span style="color: #636e72;">Indiv.</span>
+                                {% endif %}
+                            </td>
+                            
+                            <td class="{{ 'pos-knee' if is_sb }}">{{ s.s1 }}</td>
+                            <td class="{{ 'pos-knee' if is_sb }}">{{ s.s2 }}</td>
+                            <td class="{{ 'pos-prone' if is_sb }}">{{ s.s3 }}</td>
+                            <td class="{{ 'pos-prone' if is_sb }}">{{ s.s4 }}</td>
+                            <td class="{{ 'pos-stand' if is_sb }}">{{ s.s5 }}</td>
+                            <td class="{{ 'pos-stand' if is_sb }}">{{ s.s6 }}</td>
+
+                            <td class="highlight-val">{{ s.total }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>
